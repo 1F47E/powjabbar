@@ -1,4 +1,5 @@
-# voight-kampff
+# voight-kampff WIP
+## Anti DDOS via Proof of Work
 
 Voight-Kampff API is a security protocol that requires clients to perform a proof-of-work computation, like Adam Back's Hashcash system (the same as used in bitcoin), to gain access to the API. 
 By ensuring requests are computationally costly for the client but lightweight for the server, the system effectively counters denial-of-service and spam attacks.
