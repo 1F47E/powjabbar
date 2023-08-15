@@ -1,4 +1,4 @@
-# voight-kampff WIP
+# pow jabbar WIP
 ## Anti DDOS via Proof of Work
 
 Voight-Kampff API is a security protocol that requires clients to perform a proof-of-work computation, like Adam Back's Hashcash system (the same as used in bitcoin), to gain access to the API. 
@@ -28,9 +28,6 @@ The system dynamically adjusts the computational challenge's difficulty, ensurin
 ### Client-Side Implementation
 
 With SHA-256 as the foundation, the system is designed for easy client-side implementation using JavaScript.
-
-### Name
-Voight-Kampff is the name of the test used to determine if someone is a replicant in a Blade Runner novel by Philipp K. Dick
 
 ### Inspiration
 Heavely insipred by Islam Bekbuzarov and his https://github.com/blkmlk/ddos-pow
