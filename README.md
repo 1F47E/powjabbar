@@ -33,3 +33,8 @@ Voight-Kampff is the name of the test used to determine if someone is a replican
 
 ### Inspiration
 Heavely insipred by Islam Bekbuzarov and his https://github.com/blkmlk/ddos-pow
+
+### Links
+https://en.wikipedia.org/wiki/Hashcash
+
+
