@@ -21,13 +21,10 @@ Each request is timestamped to ensure timely submissions, limiting the window of
 
 To safeguard against replay attacks, each request incorporates an HMAC signature, ensuring that the request is both untampered and unique.
 
-### Difficulty Adjustment
-
-The system dynamically adjusts the computational challenge's difficulty, ensuring that it remains effective regardless of evolving hardware or network conditions.
 
 ### Client-Side Implementation
 
-With SHA-256 as the foundation, the system is designed for easy client-side implementation using JavaScript.
+With SHA-256 challange its easy for client-side implementation using JavaScript (see solver.js).
 
 ### Inspiration
 Heavely insipred by Islam Bekbuzarov and his https://github.com/blkmlk/ddos-pow
@@ -36,3 +33,9 @@ Heavely insipred by Islam Bekbuzarov and his https://github.com/blkmlk/ddos-pow
 https://en.wikipedia.org/wiki/Hashcash
 
 
+
+### Benchmark
+```
+BenchmarkVerification-10      	14581705	        81.23 ns/op
+BenchmarkNewChallenge-10    	 1382676	       867.6 ns/op
+```
