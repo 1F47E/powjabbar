@@ -1,21 +1,21 @@
-// create a random nonce, send it to the client
-// client generates
-
 package main
 
 import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
+
+var signatureKey = []byte("secret")
 
 const (
 	timelimit         = 1 * time.Second
@@ -42,8 +42,6 @@ func printInfo(msg string) {
 
 // HMAC
 
-var signatureKey = []byte("secret")
-
 func GenerateSalt(length int) ([]byte, error) {
 	salt := make([]byte, length)
 	_, err := io.ReadFull(rand.Reader, salt)
@@ -53,58 +51,66 @@ func GenerateSalt(length int) ([]byte, error) {
 	return salt, nil
 }
 
-func GenerateHMAC(data, key, salt []byte) string {
+func GenerateHMAC(data, key, salt []byte) []byte {
 	h := hmac.New(sha256.New, key)
 	h.Write(data)
-	h.Write(salt) // append salt to the data before generating the HMAC
-	signature := hex.EncodeToString(h.Sum(nil))
-	return signature
+	h.Write(salt)
+	return h.Sum(nil)
 }
 
-func VerifyHMAC(data, key, salt []byte, expectedHMAC string) bool {
-	gen := GenerateHMAC(data, key, salt)
-	return hmac.Equal([]byte(gen), []byte(expectedHMAC))
+func VerifyHMAC(data, key, salt, expectedHMAC []byte) bool {
+	return hmac.Equal(GenerateHMAC(data, key, salt), expectedHMAC)
 }
 
 // POW CHALLENGE
+
 // Server's challenge
 type challenge struct {
-	data      string
-	nonce     string // to use as a salt
-	criteria  string
-	signature string
+	data     string
+	criteria string
 }
 
+// data format
+// TIMESTAMP|NONCE|SIGNATURE
+// 1692065996206899|1692065996206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
+// 8 bytes| 8 byte | 64 bytes
 func NewChallenge(difficulty int, key []byte) (*challenge, error) {
 	if difficulty == 0 {
 		return nil, fmt.Errorf("difficulty must be greater than 0")
 	}
-	nonce := make([]byte, 1)
+
+	nonce := make([]byte, 8)
 	_, err := io.ReadFull(rand.Reader, nonce)
 	if err != nil {
 		return nil, fmt.Errorf("generate nonce failed: %v", err)
 	}
-	nonceStr := fmt.Sprintf("%d", nonce[0])
-	timestamp := fmt.Sprintf("%d", time.Now().UnixMicro())
-	toSign := fmt.Sprintf("%s|%s", timestamp, nonceStr)
-	signature := GenerateHMAC([]byte(toSign), key, []byte(nonceStr))
 
-	// final data looks like
-	// TIMESTAMP|NONCE|SIGNATURE
-	data := fmt.Sprintf("%s|%s", toSign, signature)
+	// convert timestamp to binary
+	timestamp := time.Now().UnixMicro()
+	bTimestamp := make([]byte, 8)
+	binary.BigEndian.PutUint64(bTimestamp, uint64(timestamp))
+
+	// sign data
+	signData := make([]byte, 8+8) // timestamp + nonce
+	copy(signData, bTimestamp)
+	copy(signData[8:], nonce)
+	bSignature := GenerateHMAC(signData, key, nonce)
+
+	// assemble result data
+	data := make([]byte, 16+32)
+	copy(data, signData)
+	copy(data[16:], bSignature)
 
 	// gen difficulty
-	symbol := "0"
-	criteria := ""
+	runes := make([]rune, difficulty)
 	for i := 0; i < difficulty; i++ {
-		criteria += symbol
+		runes[i] = '0'
 	}
+	dataStr := base64.StdEncoding.EncodeToString(data)
 
 	return &challenge{
-		nonce:     nonceStr,
-		data:      data,
-		criteria:  criteria, //  hash must start with this string
-		signature: signature,
+		data:     dataStr,
+		criteria: string(runes),
 	}, nil
 }
 
@@ -115,31 +121,32 @@ type solution struct {
 	hash       string
 
 	// fields extracted from data
-	timestamp int64
-	nonce     string
-	signature string
+	timestamp  int64
+	nonce      []byte
+	signedData []byte
+	signature  []byte
 }
 
+// deserialize with base64
 func (s *solution) deserialize() error {
-	parts := strings.Split(s.data, "|")
-	if len(parts) != 3 {
-		return fmt.Errorf("invalid base data: %s", s.data)
+	var err error
+	bindata, err := base64.StdEncoding.DecodeString(s.data)
+	if err != nil {
+		return err
 	}
+	// get timestamp from the data first 8 bytes
+	s.timestamp = int64(binary.BigEndian.Uint64(bindata[0:8]))
 
-	ts := parts[0]
-	// just to be sure the timestamp is int
-	timestamp, err := strconv.ParseInt(ts, 10, 64)
-	if err != nil {
-		return fmt.Errorf("invalid timestamp, not int: %v", err)
-	}
-	s.timestamp = timestamp
-	s.nonce = parts[1]
-	// just to be sure the nonce is uint
-	_, err = strconv.ParseUint(s.nonce, 10, 64)
-	if err != nil {
-		return fmt.Errorf("invalid nonce, not int: %v", err)
-	}
-	s.signature = parts[2]
+	// get nonce
+	s.nonce = bindata[8:16]
+
+	// get data to sign (timestamp + nonce)
+	signedData := make([]byte, 16)
+	copy(signedData, bindata[0:16])
+	s.signedData = signedData
+
+	// get signature
+	s.signature = bindata[16:]
 	return nil
 }
 
@@ -150,8 +157,7 @@ func (s *solution) verifySolution() bool {
 }
 
 func (s *solution) verifySignature(key []byte) bool {
-	dataToSign := fmt.Sprintf("%d|%s", s.timestamp, s.nonce)
-	return VerifyHMAC([]byte(dataToSign), key, []byte(s.nonce), s.signature)
+	return VerifyHMAC(s.signedData, key, s.nonce, s.signature)
 }
 
 func (s *solution) verifyTimelimit() bool {
@@ -199,9 +205,11 @@ func main() {
 		}
 		fmt.Printf("using difficulty: %s\n", args[0])
 	}
+	testB64(difficulty, signatureKey)
 
-	// ===== Server generates the challenge
+}
 
+func testB64(difficulty int, signatureKey []byte) {
 	now := time.Now()
 	c, err := NewChallenge(difficulty, signatureKey)
 	if err != nil {
@@ -217,7 +225,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("solution deserialization error: %v", err)
 	}
-	msg := fmt.Sprintf("Solution found:\n%+v\ntook: %v\n", sol, time.Since(now))
+	msg := fmt.Sprintf("Solution found, took: %v\n", time.Since(now))
+	msg += fmt.Sprintf("data: %+v\n", sol.data)
+	msg += fmt.Sprintf("added value: %+v\n", sol.addedValue)
+	msg += fmt.Sprintf("hash: %+v\n", sol.hash)
 	printInfo(msg)
 
 	// ===== Server verifies the solution
