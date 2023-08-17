@@ -65,10 +65,11 @@ func TestGenerateChallenge(t *testing.T) {
 			timestamp := int64(binary.BigEndian.Uint64(data[lenDifficulty : lenDifficulty+lenTimestamp]))
 			assert.True(t, time.Since(time.UnixMicro(timestamp)) <= 5*time.Second)
 
+			signer := signature.NewHMACSignature(tt.signatureKey)
 			nonce := data[lenDifficulty+lenTimestamp : lenDifficulty+lenTimestamp+lenNonce]
 			signatureData := data[lenDifficulty : lenDifficulty+lenTimestamp+lenNonce]
-			expectedSignature := signature.Sign(signatureData, tt.signatureKey, nonce)
-			assert.True(t, signature.Verify(signatureData, tt.signatureKey, nonce, expectedSignature))
+			expectedSignature := signer.Sign(signatureData, nonce)
+			assert.True(t, signer.Verify(signatureData, nonce, expectedSignature))
 
 			assert.True(t, bytes.Equal(expectedSignature, data[lenDifficulty+lenTimestamp+lenNonce:]))
 		})

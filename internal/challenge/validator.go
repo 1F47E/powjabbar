@@ -63,7 +63,7 @@ func Deserialize(data string) (*Solution, error) {
 }
 
 // verify that submitted solution is valid
-func (s *Solution) Verify(data, addedvalue, solution string, sigKey []byte, timelimit time.Duration) (bool, error) {
+func (s *Solution) Verify(data, addedvalue, solution string, signatureKey []byte, timelimit time.Duration) (bool, error) {
 	// difficulty
 	criteriaMet := solution[:len(s.criteria)] == s.criteria
 	if !criteriaMet {
@@ -78,7 +78,8 @@ func (s *Solution) Verify(data, addedvalue, solution string, sigKey []byte, time
 	}
 
 	// signature
-	if !signature.Verify(s.signedData, sigKey, s.nonce, s.signature) {
+	signer := signature.NewHMACSignature(signatureKey)
+	if !signer.Verify(s.signedData, s.nonce, s.signature) {
 		return false, ErrInvalidSignature
 	}
 

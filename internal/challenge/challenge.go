@@ -60,10 +60,11 @@ func GenerateChallenge(difficulty int, signatureKey []byte) (*Challenge, error) 
 	binary.BigEndian.PutUint64(bTimestamp, uint64(timestamp))
 
 	// sign data
+	signer := signature.NewHMACSignature(signatureKey)
 	signData := make([]byte, lenTimestamp+lenNonce)
 	copy(signData, bTimestamp)
 	copy(signData[lenTimestamp:], nonce)
-	bSignature := signature.Sign(signData, signatureKey, nonce)
+	bSignature := signer.Sign(signData, nonce)
 
 	// assemble result data payload
 	data := make([]byte, lenDifficulty+len(signData)+lenSignature)
