@@ -1,4 +1,4 @@
-module github.com/1F47E/go-pow-jabbar
+module github.com/1F47E/powjabbar
 
 go 1.20
 

@@ -1,10 +1,9 @@
-package main
+package powjabbar
 
 import (
 	"testing"
 	"time"
 
-	pj "github.com/1F47E/powjabbar"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +16,7 @@ func BenchmarkExtraction(b *testing.B) {
 
 	// benchmark
 	b.ResetTimer()
-	pow := pj.NewPowJabbar([]byte("secret"))
+	pow := NewPowJabbar([]byte("secret"))
 	for i := 0; i < b.N; i++ {
 		valid, err := pow.VerifySolution(data, value, hash, time.Second)
 		assert.NoError(b, err)
@@ -26,7 +25,7 @@ func BenchmarkExtraction(b *testing.B) {
 }
 
 func BenchmarkNewChallenge(b *testing.B) {
-	pow := pj.NewPowJabbar([]byte("test"))
+	pow := NewPowJabbar([]byte("test"))
 	for i := 0; i < b.N; i++ {
 		_, err := pow.GenerateChallenge(3)
 		assert.NoError(b, err)
@@ -34,7 +33,7 @@ func BenchmarkNewChallenge(b *testing.B) {
 }
 
 func TestGetChallenge(t *testing.T) {
-	pow := pj.NewPowJabbar([]byte("test"))
+	pow := NewPowJabbar([]byte("test"))
 	t.Run("Generate challenge", func(t *testing.T) {
 		_, err := pow.GenerateChallenge(3)
 		assert.NoError(t, err)

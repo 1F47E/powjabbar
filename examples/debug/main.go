@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	pj "github.com/1F47E/go-pow-jabbar"
+	pj "github.com/1F47E/powjabbar"
 )
 
 var signatureKey = []byte("secret")

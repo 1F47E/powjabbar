@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/1F47E/go-pow-jabbar/internal/signature"
+	"github.com/1F47E/powjabbar/internal/signature"
 )
 
 type Validator struct {

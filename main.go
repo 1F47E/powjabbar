@@ -8,8 +8,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/1F47E/go-pow-jabbar/internal/signature"
-	"github.com/1F47E/go-pow-jabbar/internal/validator"
+	"github.com/1F47E/powjabbar/internal/signature"
+	"github.com/1F47E/powjabbar/internal/validator"
 )
 
 const (
