@@ -1,0 +1,6 @@
+github.com/1F47E/powjabbar v0.0.0-20230817195042-07be5185edbc h1:F4uWZKUnbR8uiLyZmoBWGNcq+Dlsba0hWxWUaNX9cOc=
+github.com/1F47E/powjabbar v0.0.0-20230817195042-07be5185edbc/go.mod h1:A3vnuKurgmT6S+zymMkyXuRMUPjhMgzcQTTfm2MRgUM=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
