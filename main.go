@@ -48,6 +48,33 @@ type Challenge struct {
 	Criteria string
 }
 
+// About difficulty levels
+// Depending on the hardware, the time to solve the challenge may vary
+// 4 - 20-50ms
+// 5 - 100-200ms
+// 6 - 15+ sec
+
+// Generate easy challenge
+// With difficulty level 4
+// Estimated time to solve ~40ms
+func (p *PowJabbar) GenerateChallangeEasy() (*Challenge, error) {
+	return p.GenerateChallenge(4)
+}
+
+// Generate medium challenge
+// With difficulty level 5
+// Estimated time to solve ~100ms
+func (p *PowJabbar) GenerateChallangeMedium() (*Challenge, error) {
+	return p.GenerateChallenge(5)
+}
+
+// Generate hard challenge
+// With difficulty level 6
+// Estimated time to solve ~10+ sec
+func (p *PowJabbar) GenerateChallangeHard() (*Challenge, error) {
+	return p.GenerateChallenge(6)
+}
+
 // Generate challenge for the client
 // difficulty - number of leading zeroes in the hash
 // The more leading zeros in a hash, the more difficult it is to find the solution
