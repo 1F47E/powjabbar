@@ -1,11 +1,8 @@
-module github.com/1F47E
+module github.com/1F47E/go-pow-jabbar
 
 go 1.20
 
-require (
-	github.com/stretchr/testify v1.8.4
-	golang.org/x/crypto v0.12.0
-)
+require github.com/stretchr/testify v1.8.4
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
