@@ -30,6 +30,7 @@ type Challenge struct {
 
 // Generate challenge for the client
 // difficulty - number of leading zeroes in the hash
+// key - secret key used to sign the data, recommended to be at least 32 bytes long
 // The more leading zeros in a hash, the more difficult it is to find the solution
 // Choosen difficulty level will be baked into the data payload
 func GenerateChallenge(difficulty int, key []byte) (*Challenge, error) {
@@ -82,6 +83,7 @@ func GenerateChallenge(difficulty int, key []byte) (*Challenge, error) {
 // value - added value added by the client
 // hash - hash of the data + added value
 func VerifySolution(data, value, hash string, signatureKey []byte, timelimit time.Duration) (bool, error) {
+	// TODO: add reason for failed validations
 	sol, err := solution.Deserialize(data)
 	if err != nil {
 		return false, fmt.Errorf("solution data is broken: %v", err)

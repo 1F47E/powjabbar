@@ -1,7 +1,10 @@
 # pow jabbar WIP
 ## Anti DDOS via Proof of Work
 
-PoW Jabbar is API library, implementing a security protocol that requires clients to perform a proof-of-work computation, like Adam Back's Hashcash system (the same as used in bitcoin), to gain access to the API. 
+PoW Jabbar is API library, implementing a security protocol that requires clients to perform a proof-of-work computation to gain access to main access point. 
+
+The also is similar to Adam Back's Hashcash system, the same as used in bitcoin. 
+
 By ensuring requests are computationally costly for the client but lightweight for the server, the system effectively counters denial-of-service and spam attacks.
 
 ## Features
@@ -10,7 +13,24 @@ By ensuring requests are computationally costly for the client but lightweight f
 Utilizing the SHA-256 hashing algorithm, the system require the computational proof-of-work to be executed solely on the client side, making it resource-intensive for the requester but cheap for the server.
 
 ### Stateless Challenge Design
-Challenges are self-contained and do not require any external storage. This design allows high level of scalability across API nodes.
+Challenges are self-contained and do not require any external storage. This design allows high level of scalability and performance. All data required for validation are baked into the challenge itself.
+
+### Challenge data format
+```
+// DIFFICULTY| TIMESTAMP      | NONCE          | SIGNATURE
+// 4         |1692065996206899|5996169206206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
+// 1 byte    | 8 bytes        | 8 byte         | 32 bytes
+```
+
+### Difficulty
+Difficulty is a number of leading zeros in the hash. The more leading zeros the more difficult to find a solution. Level 4 is a recommended level for most applications.
+```
+3 - 1+ms
+4 - 20-50ms
+5 - 100-200ms
+6 - 15+ sec
+7 - 30+ sec
+```
 
 
 ### Timestamp Detection
