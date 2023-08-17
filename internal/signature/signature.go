@@ -5,15 +5,6 @@ import (
 	"crypto/sha256"
 )
 
-// func GenerateSignature() ([]byte, error) {
-// 	s := make([]byte, 32)
-// 	_, err := io.ReadFull(rand.Reader, s)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return s, nil
-// }
-
 func Sign(data, key, salt []byte) []byte {
 	h := hmac.New(sha256.New, key)
 	h.Write(data)

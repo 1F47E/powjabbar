@@ -37,7 +37,7 @@ func printInfo(msg string) {
 	fmt.Println(colorCyan, msg, colorReset)
 }
 
-// client side POV
+// client side POW demo
 func solveChallenge(data, criteria string) (string, string, string) {
 	for i := 0; ; i++ {
 		toSign := fmt.Sprintf("%s%d", data, i)
@@ -67,6 +67,7 @@ func main() {
 	pow := pj.NewPowJabbar(signatureKey)
 
 	// difficulty can be changed on the fly
+	fmt.Printf("timestamp of challenge: %d\n", time.Now().UnixMicro())
 	c, err := pow.GenerateChallenge(difficulty)
 	if err != nil {
 		log.Fatalf("generate challenge failed: %v", err)

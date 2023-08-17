@@ -11,28 +11,11 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/1F47E/powjabbar/internal/signature"
 	"github.com/1F47E/powjabbar/internal/utils"
-)
-
-const (
-	lenDifficulty = 1
-	lenTimestamp  = 8
-	lenNonce      = 8
-	lenSignedData = lenTimestamp + lenNonce
-	lenSignature  = 32
-	lenData       = lenDifficulty + lenSignedData + lenSignature // 49 bytes
-)
-
-var (
-	ErrInvalidHash       = errors.New("validator: solution hash is invalid")
-	ErrInvalidSignature  = errors.New("validator: solution signature is invalid")
-	ErrInvalidDifficulty = errors.New("validator: solution difficulty is invalid")
-	ErrTimelimitExceed   = errors.New("validator: solution timelimit exceed")
 )
 
 type Solution struct {
@@ -48,27 +31,27 @@ func Deserialize(data string) (*Solution, error) {
 	var err error
 
 	// decode data to binary
-	if len(data) != lenData {
-		return nil, fmt.Errorf("validator: invalid data len: %d", len(data))
-	}
-	bindata, err := base64.StdEncoding.DecodeString(data)
+	binData, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidData
+	}
+	if len(binData) != lenData {
+		return nil, ErrInvalidDataLen
 	}
 
 	// extract data from binary
 	var pos int
-	difficulty := int(bindata[pos])
+	difficulty := int(binData[pos])
 	pos++
 
-	timestamp := int64(binary.BigEndian.Uint64(bindata[pos : pos+lenTimestamp]))
+	timestamp := int64(binary.BigEndian.Uint64(binData[pos : pos+lenTimestamp]))
 	pos += lenTimestamp
 
-	nonce := bindata[pos : pos+lenNonce]
+	nonce := binData[pos : pos+lenNonce]
 
 	signedData := make([]byte, lenSignedData)
-	copy(signedData, bindata[lenDifficulty:lenDifficulty+lenSignedData])
-	signature := bindata[len(bindata)-lenSignature:]
+	copy(signedData, binData[lenDifficulty:lenDifficulty+lenSignedData])
+	signature := binData[len(binData)-lenSignature:]
 
 	return &Solution{
 		criteria:   utils.DifficultyToCriteria(difficulty),
