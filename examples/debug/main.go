@@ -62,13 +62,12 @@ func main() {
 		}
 		fmt.Printf("using difficulty: %s\n", args[0])
 	}
-	testB64(difficulty, signatureKey)
 
-}
-
-func testB64(difficulty int, signatureKey []byte) {
 	now := time.Now()
-	c, err := pj.GenerateChallenge(difficulty, signatureKey)
+	pow := pj.NewPowJabbar(signatureKey)
+
+	// difficulty can be changed on the fly
+	c, err := pow.GenerateChallenge(difficulty)
 	if err != nil {
 		log.Fatalf("generate challenge failed: %v", err)
 	}
@@ -88,39 +87,15 @@ func testB64(difficulty int, signatureKey []byte) {
 	// ===== VERIFY SOLUTION
 
 	now = time.Now()
-	success, err := pj.VerifySolution(solData, solValue, solHash, signatureKey, timelimit)
+	success, err := pow.VerifySolution(solData, solValue, solHash, timelimit)
 	if err != nil {
 		log.Fatalf("solution error: %v", err)
 	}
 	if !success {
-		printError("Solution is invalid!")
-		os.Exit(0)
+		log.Fatalf("solution error: %v", err)
 	}
 	printSuccess("Solution is valid!")
 
 	printInfo(fmt.Sprintf("Verification, took: %v\n", time.Since(now)))
-
-	// // check hash
-	// if sol.VerifySolution(solData, solValue, solHash) {
-	// 	printSuccess("Solution is valid!")
-	// } else {
-	// 	printError("Solution is invalid!")
-	// }
-
-	// // check time limit
-	// // TODO embed timelimit into the data payload
-	// timelimit := 1 * time.Second
-	// if sol.VerifyTimelimit(timelimit) {
-	// 	printSuccess("Request is within time limit!")
-	// } else {
-	// 	printError("Request is out of time limit!")
-	// }
-
-	// // verify signature
-	// if sol.VerifySignature(signatureKey) {
-	// 	printSuccess("Signature is valid!")
-	// } else {
-	// 	printError("Signature is invalid!")
-	// }
 
 }

@@ -7,24 +7,22 @@ import (
 	"io"
 )
 
-// HMAC
-
-func GenerateSalt(length int) ([]byte, error) {
-	salt := make([]byte, length)
-	_, err := io.ReadFull(rand.Reader, salt)
+func GenerateSignature() ([]byte, error) {
+	s := make([]byte, 32)
+	_, err := io.ReadFull(rand.Reader, s)
 	if err != nil {
 		return nil, err
 	}
-	return salt, nil
+	return s, nil
 }
 
-func GenerateHMAC(data, key, salt []byte) []byte {
+func Sign(data, key, salt []byte) []byte {
 	h := hmac.New(sha256.New, key)
 	h.Write(data)
 	h.Write(salt)
 	return h.Sum(nil)
 }
 
-func VerifyHMAC(data, key, salt, expectedHMAC []byte) bool {
-	return hmac.Equal(GenerateHMAC(data, key, salt), expectedHMAC)
+func Verify(data, key, salt, expectedSignature []byte) bool {
+	return hmac.Equal(Sign(data, key, salt), expectedSignature)
 }

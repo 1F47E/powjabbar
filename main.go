@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/1F47E/go-pow-jabbar/internal/signature"
-	"github.com/1F47E/go-pow-jabbar/internal/solution"
+	"github.com/1F47E/go-pow-jabbar/internal/validator"
 )
 
 const (
@@ -19,10 +19,30 @@ const (
 	lenSignature  = 32
 )
 
+// signatureKey - secret key used to sign the data payload.
+// Recommended to be at least 32 bytes long
+type PowJabbar struct {
+	signatureKey []byte
+}
+
+func NewPowJabbar(signatureKey []byte) *PowJabbar {
+	return &PowJabbar{
+		signatureKey: signatureKey,
+	}
+}
+
+// GenerateSignature generates a random signature key 32 bytes long
+// This key will be used to sign the data payload
+// Key is generated using crypto/rand and may return error sometimes
+func GenerateSignature() ([]byte, error) {
+	return signature.GenerateSignature()
+}
+
 // Challenge data format
 // DIFFICULTY|TIMESTAMP|NONCE|SIGNATURE
 // 4|1692065996206899|1692065996206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
 // 1 byte | 8 bytes| 8 byte | 32 bytes
+// total 49 bytes
 type Challenge struct {
 	Data     string
 	Criteria string
@@ -30,10 +50,10 @@ type Challenge struct {
 
 // Generate challenge for the client
 // difficulty - number of leading zeroes in the hash
-// key - secret key used to sign the data, recommended to be at least 32 bytes long
 // The more leading zeros in a hash, the more difficult it is to find the solution
 // Choosen difficulty level will be baked into the data payload
-func GenerateChallenge(difficulty int, key []byte) (*Challenge, error) {
+func (p *PowJabbar) GenerateChallenge(difficulty int) (*Challenge, error) {
+	// TODO: change to const type difficulty
 	if difficulty == 0 {
 		return nil, fmt.Errorf("difficulty must be greater than 0")
 	}
@@ -58,17 +78,16 @@ func GenerateChallenge(difficulty int, key []byte) (*Challenge, error) {
 	signData := make([]byte, lenTimestamp+lenNonce)
 	copy(signData, bTimestamp)
 	copy(signData[lenTimestamp:], nonce)
-	bSignature := signature.GenerateHMAC(signData, key, nonce)
+	bSignature := signature.Sign(signData, p.signatureKey, nonce)
 
 	// assemble result data
-	// p for readability
 	data := make([]byte, lenDifficulty+len(signData)+lenSignature)
-	p := 0
-	data[p] = byte(difficulty)
-	p = lenDifficulty
-	copy(data[p:], signData)
-	p += len(signData)
-	copy(data[p:], bSignature)
+	pos := 0
+	data[pos] = byte(difficulty)
+	pos = lenDifficulty
+	copy(data[pos:], signData)
+	pos += len(signData)
+	copy(data[pos:], bSignature)
 
 	dataStr := base64.StdEncoding.EncodeToString(data)
 
@@ -82,9 +101,9 @@ func GenerateChallenge(difficulty int, key []byte) (*Challenge, error) {
 // data - data payload given to the client
 // value - added value added by the client
 // hash - hash of the data + added value
-func VerifySolution(data, value, hash string, signatureKey []byte, timelimit time.Duration) (bool, error) {
+func (p *PowJabbar) VerifySolution(data, value, hash string, timelimit time.Duration) (bool, error) {
 	// TODO: add reason for failed validations
-	sol, err := solution.Deserialize(data)
+	sol, err := validator.Deserialize(data)
 	if err != nil {
 		return false, fmt.Errorf("solution data is broken: %v", err)
 	}
@@ -101,7 +120,7 @@ func VerifySolution(data, value, hash string, signatureKey []byte, timelimit tim
 	}
 
 	// verify signature
-	if !sol.VerifySignature(signatureKey) {
+	if !sol.VerifySignature(p.signatureKey) {
 		return false, nil
 	}
 	return true, nil

@@ -2,42 +2,41 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	pj "github.com/1F47E/go-pow-jabbar"
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: fix this
-// func BenchmarkExtraction(b *testing.B) {
-//
-// 	// fake solution
-// 	sol := solution.Solution{
-// 		Data:       "AAYC/hQ8DX7ISGXWiYsuuBY0LcqvV4MbPMXU/cab5DyjOdpI9Hkro90=",
-// 		AddedValue: "44927",
-// 		Hash:       "0000caae3e3fd8d25b64e4eaa982b65921f7724421776e7646f86736dcf75dd7",
-// 	}
-//
-// 	// benchmark
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		err := sol.Deserialize()
-// 		assert.NoError(b, err)
-// 	}
-// }
+func BenchmarkExtraction(b *testing.B) {
+
+	// fake solution
+	data := "AQAGAxUWHmkmP4VtalxZ71xaDiK+xy5wE/lqrgLg0TPzF7ey/rTAq1HEVCPG/EAMKg=="
+	value := "7"
+	hash := "0563442751d2b2bfb418d1d34e0db20c979961d3d3bf89dd206754b04c247a52"
+
+	// benchmark
+	b.ResetTimer()
+	pow := pj.NewPowJabbar([]byte("secret"))
+	for i := 0; i < b.N; i++ {
+		valid, err := pow.VerifySolution(data, value, hash, time.Second)
+		assert.NoError(b, err)
+		assert.True(b, valid)
+	}
+}
 
 func BenchmarkNewChallenge(b *testing.B) {
-	var test_key = []byte("test_key")
+	pow := pj.NewPowJabbar([]byte("test"))
 	for i := 0; i < b.N; i++ {
-		_, err := pj.GenerateChallenge(3, test_key)
+		_, err := pow.GenerateChallenge(3)
 		assert.NoError(b, err)
 	}
 }
 
 func TestGetChallenge(t *testing.T) {
-	var test_key = []byte("test_key")
-	// test challenge generation
+	pow := pj.NewPowJabbar([]byte("test"))
 	t.Run("Generate challenge", func(t *testing.T) {
-		_, err := pj.GenerateChallenge(3, test_key)
+		_, err := pow.GenerateChallenge(3)
 		assert.NoError(t, err)
 	})
 
