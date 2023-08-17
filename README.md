@@ -1,4 +1,7 @@
-# pow jabbar WIP
+![powjabbar](assets/banner.jpg)
+# WIP
+v 0.0.1 coming soon
+
 ## Anti DDOS via Proof of Work
 
 PoW Jabbar is API library, implementing a security protocol that requires clients to perform a proof-of-work computation to gain access to main access point. 
@@ -17,9 +20,11 @@ Challenges are self-contained and do not require any external storage. This desi
 
 ### Challenge data format
 ```
-// DIFFICULTY| TIMESTAMP      | NONCE          | SIGNATURE
-// 4         |1692065996206899|5996169206206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
-// 1 byte    | 8 bytes        | 8 byte         | 32 bytes
+   DIFFICULTY | TIMESTAMP  | NONCE     | SIGNATURE
+              |            |           |
+   4          | 16920659...| 5996206...| 7814f500270011d762...
+              |            |           |
+   1 byte     | 8 bytes    | 8 byte    | 32 bytes
 ```
 
 ### Difficulty
@@ -59,3 +64,10 @@ https://en.wikipedia.org/wiki/Hashcash
 BenchmarkVerification-10      	14581705	        81.23 ns/op
 BenchmarkNewChallenge-10    	 1382676	       867.6 ns/op
 ```
+
+### TODO
+- [ ] Add tests
+- [ ] Add examples with HTTP server
+- [ ] add releaser scripts 
+- [ ] build online example with front end
+- [ ] add react npm package for solver
