@@ -1,15 +1,11 @@
 package powjabbar
 
 import (
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/1F47E/powjabbar/internal/signature"
-	"github.com/1F47E/powjabbar/internal/validator"
+	"github.com/1F47E/powjabbar/internal/challenge"
+	// "github.com/1F47E/powjabbar/internal/validator"
 )
 
 const (
@@ -31,47 +27,24 @@ func NewPowJabbar(signatureKey []byte) *PowJabbar {
 	}
 }
 
-// GenerateSignature generates a random signature key 32 bytes long
-// This key will be used to sign the data payload
-// Key is generated using crypto/rand and may return error sometimes
-func GenerateSignature() ([]byte, error) {
-	return signature.GenerateSignature()
-}
-
-// Challenge data format
-// DIFFICULTY|TIMESTAMP|NONCE|SIGNATURE
-// 4|1692065996206899|1692065996206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
-// 1 byte | 8 bytes| 8 byte | 32 bytes
-// total 49 bytes
-type Challenge struct {
-	Data     string
-	Criteria string
-}
-
-// About difficulty levels
-// Depending on the hardware, the time to solve the challenge may vary
-// 4 - 20-50ms
-// 5 - 100-200ms
-// 6 - 15+ sec
-
 // Generate easy challenge
 // With difficulty level 4
 // Estimated time to solve ~40ms
-func (p *PowJabbar) GenerateChallangeEasy() (*Challenge, error) {
+func (p *PowJabbar) GenerateChallangeEasy() (*challenge.Challenge, error) {
 	return p.GenerateChallenge(4)
 }
 
 // Generate medium challenge
 // With difficulty level 5
 // Estimated time to solve ~100ms
-func (p *PowJabbar) GenerateChallangeMedium() (*Challenge, error) {
+func (p *PowJabbar) GenerateChallangeMedium() (*challenge.Challenge, error) {
 	return p.GenerateChallenge(5)
 }
 
 // Generate hard challenge
 // With difficulty level 6
 // Estimated time to solve ~10+ sec
-func (p *PowJabbar) GenerateChallangeHard() (*Challenge, error) {
+func (p *PowJabbar) GenerateChallangeHard() (*challenge.Challenge, error) {
 	return p.GenerateChallenge(6)
 }
 
@@ -79,49 +52,16 @@ func (p *PowJabbar) GenerateChallangeHard() (*Challenge, error) {
 // difficulty - number of leading zeroes in the hash
 // The more leading zeros in a hash, the more difficult it is to find the solution
 // Choosen difficulty level will be baked into the data payload
-func (p *PowJabbar) GenerateChallenge(difficulty int) (*Challenge, error) {
+// Depending on the hardware, the time to solve the challenge may vary
+// 4 - 20-50ms
+// 5 - 100-200ms
+// 6 - 15+ sec
+func (p *PowJabbar) GenerateChallenge(difficulty int) (*challenge.Challenge, error) {
 	// TODO: change to const type difficulty
 	if difficulty == 0 {
 		return nil, fmt.Errorf("difficulty must be greater than 0")
 	}
-
-	criteria := make([]rune, difficulty)
-	for i := 0; i < difficulty; i++ {
-		criteria[i] = '0'
-	}
-
-	nonce := make([]byte, lenNonce)
-	_, err := io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return nil, fmt.Errorf("generate nonce failed: %v", err)
-	}
-
-	// convert timestamp to binary
-	timestamp := time.Now().UnixMicro()
-	bTimestamp := make([]byte, lenTimestamp)
-	binary.BigEndian.PutUint64(bTimestamp, uint64(timestamp))
-
-	// sign data
-	signData := make([]byte, lenTimestamp+lenNonce)
-	copy(signData, bTimestamp)
-	copy(signData[lenTimestamp:], nonce)
-	bSignature := signature.Sign(signData, p.signatureKey, nonce)
-
-	// assemble result data
-	data := make([]byte, lenDifficulty+len(signData)+lenSignature)
-	pos := 0
-	data[pos] = byte(difficulty)
-	pos = lenDifficulty
-	copy(data[pos:], signData)
-	pos += len(signData)
-	copy(data[pos:], bSignature)
-
-	dataStr := base64.StdEncoding.EncodeToString(data)
-
-	return &Challenge{
-		Data:     dataStr,
-		Criteria: string(criteria),
-	}, nil
+	return challenge.GenerateChallenge(difficulty, p.signatureKey)
 }
 
 // Verify clients solution
@@ -130,25 +70,11 @@ func (p *PowJabbar) GenerateChallenge(difficulty int) (*Challenge, error) {
 // hash - hash of the data + added value
 func (p *PowJabbar) VerifySolution(data, value, hash string, timelimit time.Duration) (bool, error) {
 	// TODO: add reason for failed validations
-	sol, err := validator.Deserialize(data)
+	sol, err := challenge.Deserialize(data)
 	if err != nil {
 		return false, fmt.Errorf("solution data is broken: %v", err)
 	}
 
 	// Step by steps check, fail early and fast
-	if !sol.VerifySolution(data, value, hash) {
-		return false, nil
-	}
-
-	// check time limit
-	// TODO embed timelimit into the data payload
-	if !sol.VerifyTimelimit(timelimit) {
-		return false, nil
-	}
-
-	// verify signature
-	if !sol.VerifySignature(p.signatureKey) {
-		return false, nil
-	}
-	return true, nil
+	return sol.Verify(data, value, hash, p.signatureKey, timelimit)
 }
