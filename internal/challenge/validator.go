@@ -78,7 +78,7 @@ func (s *Solution) Verify(data, addedvalue, solution string, signatureKey []byte
 	}
 
 	// signature
-	signer := signature.NewHMACSignature(signatureKey)
+	signer := signature.New(signatureKey)
 	if !signer.Verify(s.signedData, s.nonce, s.signature) {
 		return false, ErrInvalidSignature
 	}

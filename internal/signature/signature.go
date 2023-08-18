@@ -5,16 +5,11 @@ import (
 	"crypto/sha256"
 )
 
-type Signer interface {
-	Sign(data, salt []byte) []byte
-	Verify(data, salt, signature []byte) bool
-}
-
 type HMACSignature struct {
 	key []byte
 }
 
-func NewHMACSignature(key []byte) Signer {
+func New(key []byte) *HMACSignature {
 	return &HMACSignature{key: key}
 }
 

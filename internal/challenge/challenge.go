@@ -32,6 +32,11 @@ var (
 	ErrTimelimitExceed        = errors.New("validator: solution timelimit exceed")
 )
 
+type Signer interface {
+	Sign(data, salt []byte) []byte
+	Verify(data, salt, signature []byte) bool
+}
+
 // Challenge data format
 // DIFFICULTY|TIMESTAMP|NONCE|SIGNATURE
 // 4|1692065996206899|1692065996206899|7814f500270011d762ad116acd45c97a455e079a9d958746cb8e813a7828ed81
@@ -60,7 +65,7 @@ func GenerateChallenge(difficulty int, signatureKey []byte) (*Challenge, error) 
 	binary.BigEndian.PutUint64(bTimestamp, uint64(timestamp))
 
 	// sign data
-	signer := signature.NewHMACSignature(signatureKey)
+	signer := signature.New(signatureKey)
 	signData := make([]byte, lenTimestamp+lenNonce)
 	copy(signData, bTimestamp)
 	copy(signData[lenTimestamp:], nonce)
