@@ -10,12 +10,9 @@ PoW Jabbar is API library, implementing a security protocol that requires client
 
 The also is similar to Adam Back's Hashcash system, the same as used in bitcoin. 
 
-By ensuring requests are computationally costly for the client but lightweight for the server, the system effectively counters denial-of-service and spam attacks.
+The system require the computational proof-of-work to be executed solely on the client side, making it resource-intensive for the requester but cheap for the server.
 
 ## Features
-
-### Asynchronous Proof-of-Work Challenge
-Utilizing the SHA-256 hashing algorithm, the system require the computational proof-of-work to be executed solely on the client side, making it resource-intensive for the requester but cheap for the server.
 
 ### Stateless Challenge Design
 Challenges are self-contained and do not require any external storage. This design allows high level of scalability and performance. All data required for validation are baked into the challenge itself.
@@ -30,13 +27,11 @@ Challenges are self-contained and do not require any external storage. This desi
 ```
 
 ### Difficulty
-Difficulty is a number of leading zeros in the hash. The more leading zeros the more difficult to find a solution. Level 4 is a recommended level for most applications.
+Difficulty is a number of leading zeros in the hash. The more leading zeros the more difficult to find a solution. 
 ```
-3 - 1+ms
-4 - 20-50ms
-5 - 100-200ms
-6 - 15+ sec
-7 - 30+ sec
+ 4 - 30+ms
+ 5 - 60+ms
+ 6 - 5+ sec
 ```
 
 
@@ -51,7 +46,7 @@ To safeguard against replay attacks, each request incorporates an HMAC signature
 
 ### Client-Side Implementation
 
-With SHA-256 challange its easy for client-side implementation using JavaScript (see solver.js).
+With SHA-256 challange its easy for client-side implementation using JavaScript (see examples).
 
 ### Inspiration
 Heavely insipred by Islam Bekbuzarov and his https://github.com/blkmlk/ddos-pow
@@ -67,9 +62,4 @@ BenchmarkVerification-10      	14581705	        81.23 ns/op
 BenchmarkNewChallenge-10    	 1382676	       867.6 ns/op
 ```
 
-### TODO
-- [ ] Add tests
-- [ ] Add examples with HTTP server
-- [ ] add releaser scripts 
-- [ ] build online example with front end
-- [ ] add react npm package for solver
+
