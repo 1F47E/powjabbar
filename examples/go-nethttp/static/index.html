@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Solver</title>
+    <script src="solver.js" defer></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e2730;
+        }
+
+        .btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 400px;
+            height: 50px;
+        }
+
+        .solveBtn {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            color: #363343;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+
+        .solveBtn:hover {
+            opacity: 0.8;
+        }
+
+        .loadingMsg,
+        .results {
+            text-align: left;
+            color: #e6e6e6;
+            flex-grow: 1;
+        }
+
+        button[difficulty="1"] {
+            background-color: #a8e6cf;
+        }
+
+        button[difficulty="2"] {
+            background-color: #dcedc1;
+        }
+
+        button[difficulty="3"] {
+            background-color: #ffd3b6;
+        }
+
+        button[difficulty="4"] {
+            background-color: #ffaaa5;
+        }
+
+        button[difficulty="5"] {
+            background-color: #ff8b94;
+        }
+
+        button[difficulty="6"] {
+            background-color: #ff6675;
+        }
+
+        button[difficulty="7"] {
+            background-color: #ff4b63;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="btn-wrapper">
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="1" style="background-color: #00ff00;">Level 1</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="2" style="background-color: #66ff00;">Level 2</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="3" style="background-color: #ccff00;">Level 3</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="4" style="background-color: #ffff00;">Level 4</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="5" style="background-color: #ffcc00;">Level 5</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="6" style="background-color: #ff9900;">Level 6</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+
+        <div class="btn-container">
+            <button class="solveBtn" difficulty="7" style="background-color: #ff0000;">Level 7</button>
+            <p class="loadingMsg" style="display: none;">Solving...</p>
+            <p class="results"></p>
+        </div>
+    </div>
+
+
+    <script>
+        const API_GET_CHALLENGE = "/challenge";
+        const API_VERIFY_SOLUTION = "/solution";
+
+        const buttons = document.querySelectorAll('.solveBtn');
+        buttons.forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const btnContainer = event.target.closest('.btn-container');
+                const loadingMsg = btnContainer.querySelector('.loadingMsg');
+                const resultsElem = btnContainer.querySelector('.results');
+                const difficulty = event.target.getAttribute('difficulty');
+
+                loadingMsg.style.display = "block";
+                resultsElem.textContent = "";
+
+                const startTime = new Date().getTime();
+
+                // get challenge
+                const url = API_GET_CHALLENGE + "?difficulty=" + difficulty;
+                const challengeResponse = await fetch(url);
+                const challenge = await challengeResponse.json();
+                console.log("Challenge:", challenge)
+
+                let challengeTimeoutReached = false;
+                const challengeTimeout = setTimeout(() => {
+                    challengeTimeoutReached = true;
+                    resultsElem.textContent = `Failed to solve challenge within ${challenge.timelimit_ms}ms!`;
+                    loadingMsg.style.display = "none";
+                }, challenge.timelimit_ms);
+
+                // solve challenge
+                let solution;
+                try {
+                    solution = await solveChallenge(challenge.data, challenge.criteria);
+                    clearTimeout(challengeTimeout); // clear the timeout once the challenge is solved
+                    if (challengeTimeoutReached) return;
+                    console.log("Solution:", solution)
+                } catch (err) {
+                    console.error(err);
+                    resultsElem.textContent = "Error solving challenge.";
+                    loadingMsg.style.display = "none";
+                    return;
+                }
+
+                // submit solution
+                const verifyResponse = await fetch(API_VERIFY_SOLUTION, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: solution.data,
+                        value: solution.addedValue,
+                        hash: solution.hash
+                    })
+                });
+
+                const verification = await verifyResponse.json();
+
+                // results
+                const totalTime = new Date().getTime() - startTime;
+                resultsElem.textContent = verification.success ?
+                    `Success! Took ${totalTime}ms` :
+                    `Error: ${verification.error}. Took ${totalTime}ms`;
+
+                loadingMsg.style.display = "none";
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>
