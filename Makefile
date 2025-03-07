@@ -2,11 +2,7 @@
 
 # Run examples
 run:
-	@echo "Running examples..."
-	@if [ -d "examples/go-nethttp" ]; then \
-		echo "Running go-nethttp example..."; \
-		(cd examples/go-nethttp && go run .); \
-	fi
+	DEBUG=1 go run main.go
 
 # Run linter
 lint:
